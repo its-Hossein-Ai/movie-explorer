@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Explorer</title>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header class="site-header">
+      <!-- <div class="marquee-lights" aria-hidden="true"></div> -->
+      <h1 class="site-title">MOVIE <span>EXPLORER</span></h1>
+      <!-- <div class="marquee-lights" aria-hidden="true"></div> -->
+    </header>
+
+    <main>
+      <!-- SEARCH SECTION -->
+      <section class="search-section">
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search a movie…"
+            autocomplete="off"
+          />
+          <button id="searchBtn" class="btn-primary">Search</button>
+        </div>
+      </section>
+
+      <!-- FILTER SECTION -->
+      <nav class="filter-section" aria-label="Filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="top-rated">Top Rated</button>
+        <button class="filter-btn" data-filter="newest">Newest</button>
+        <button class="filter-btn" data-filter="favorites">Favorites</button>
+      </nav>
+
+      <div class="film-divider" aria-hidden="true"></div>
+
+      <h2 class="section-label">Popular Movies</h2>
+
+      <!-- MOVIES CONTAINER -->
+      <section id="moviesContainer" class="movies-grid"></section>
+
+      <div id="loadingState">Loading...</div>
+      <div id="errorState">Failed to load movies.</div>
+      <div id="emptyState">No movies found.</div>
+    </main>
+  </body>
+</html>
