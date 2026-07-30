@@ -2,6 +2,9 @@
 const moviesContainer = document.getElementById("moviesContainer");
 const loadingState = document.getElementById("loadingState");
 const errorState = document.getElementById("errorState");
+const searchInput = document.getElementById("searchInput");
+const searchBtn = document.getElementById("searchBtn");
+const emptyState = document.getElementById("emptyState");
 
 // Variables
 const API_KEY = "6029522e90a963e633f95e1ed416ae03";
@@ -39,7 +42,7 @@ function showError() {
   errorState.style.display = "block";
 }
 
-function creatMovieCard(movie) {
+function createMovieCard(movie) {
   const posterUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
     : "";
@@ -61,10 +64,67 @@ function creatMovieCard(movie) {
 }
 
 function renderMovies(movies) {
-  moviesContainer.innerHTML = movies.map(creatMovieCard).join("");
+  moviesContainer.innerHTML = movies.map(createMovieCard).join("");
 }
-// Event Listener
 
+function getSearchUrl(query) {
+  return `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=en-US&page=1`;
+}
+
+async function searchMovies(query) {
+  try {
+    const response = await fetch(getSearchUrl(query));
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    const data = await response.json();
+    return data.results;
+  } catch (error) {
+    console.error(error);
+    showError();
+    return [];
+  }
+}
+
+function showEmptyState() {
+  emptyState.style.display = "block";
+}
+
+function hideEmptyState() {
+  emptyState.style.display = "none";
+}
+
+async function handleSearch() {
+  const query = searchInput.value.trim();
+
+  if (query === "") {
+    return;
+  }
+
+  showLoading();
+  hideEmptyState();
+
+  const results = await searchMovies(query);
+
+  if (results.length === 0) {
+    moviesContainer.innerHTML = "";
+    showEmptyState();
+  } else {
+    renderMovies(results);
+  }
+
+  hideLoading();
+}
+
+// Event Listener
+searchBtn.addEventListener("click", handleSearch);
+searchInput.addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    handleSearch();
+  }
+});
 // Initialize App
 async function initApp() {
   showLoading();
@@ -75,5 +135,4 @@ async function initApp() {
   renderMovies(allMovies);
   hideLoading();
 }
-
 initApp();
