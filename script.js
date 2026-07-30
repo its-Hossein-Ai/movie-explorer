@@ -5,6 +5,9 @@ const errorState = document.getElementById("errorState");
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
 const emptyState = document.getElementById("emptyState");
+const detailsModal = document.getElementById("detailsModal");
+const modalBody = document.getElementById("modalBody");
+const closeModalBtn = document.getElementById("closeModalBtn");
 
 // Variables
 const API_KEY = "6029522e90a963e633f95e1ed416ae03";
@@ -31,7 +34,8 @@ async function fetchMovies() {
 
 function showLoading() {
   loadingState.style.display = "block";
-  errorState.style.display = "none";
+  hideError();
+  hideEmptyState();
 }
 
 function hideLoading() {
@@ -42,10 +46,14 @@ function showError() {
   errorState.style.display = "block";
 }
 
+function hideError() {
+  errorState.style.display = "none";
+}
+
 function createMovieCard(movie) {
   const posterUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
-    : "";
+    : "./images/no-poster.png";
 
   return `
     <article class="movie-card">
@@ -56,7 +64,7 @@ function createMovieCard(movie) {
           <span class="rating">⭐ ${movie.vote_average}</span>
           <span class="release-date">${movie.release_date}</span>
         </div>
-        <button class="btn-details">View Details</button>
+        <button class="btn-details" data-id="${movie.id}">View Details</button>
         <button class="fav-btn">♥</button>
       </div>
     </article>
@@ -64,6 +72,13 @@ function createMovieCard(movie) {
 }
 
 function renderMovies(movies) {
+  if (movies.length === 0) {
+    moviesContainer.innerHTML = "";
+    showEmptyState();
+    return;
+  }
+
+  hideEmptyState();
   moviesContainer.innerHTML = movies.map(createMovieCard).join("");
 }
 
@@ -100,6 +115,9 @@ async function handleSearch() {
   const query = searchInput.value.trim();
 
   if (query === "") {
+    renderMovies(allMovies);
+    hideEmptyState();
+    hideError();
     return;
   }
 
@@ -108,14 +126,67 @@ async function handleSearch() {
 
   const results = await searchMovies(query);
 
-  if (results.length === 0) {
-    moviesContainer.innerHTML = "";
-    showEmptyState();
-  } else {
-    renderMovies(results);
-  }
+  allMovies = results;
+
+  renderMovies(allMovies);
 
   hideLoading();
+}
+
+function getDetailsUrl(movieId) {
+  return `https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=en-US`;
+}
+
+async function fetchMovieDetails(movieId) {
+  try {
+    const response = await fetch(getDetailsUrl(movieId));
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+function createDetailsHTML(movie) {
+  const posterUrl = movie.poster_path
+    ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
+    : "";
+
+  const genres = movie.genres.map((genre) => genre.name).join(", ");
+  const runtime = movie.runtime ? `${movie.runtime} min` : "N/A";
+
+  return `
+    <img class="modal-poster" src="${posterUrl}" alt="${movie.title}">
+    <h2>${movie.title}</h2>
+    <p class="modal-overview">${movie.overview}</p>
+    <div class="modal-meta">
+      <span>⭐ ${movie.vote_average}</span>
+      <span>${movie.release_date}</span>
+      <span>${runtime}</span>
+    </div>
+    <p class="modal-genres">${genres}</p>
+  `;
+}
+
+async function openMovieDetails(movieId) {
+  detailsModal.hidden = false;
+  modalBody.innerHTML = "<p>Loading...</p>";
+
+  const movie = await fetchMovieDetails(movieId);
+  console.log(movie);
+
+  if (!movie) {
+    modalBody.innerHTML = "<p>Failed to load movie details.</p>";
+    return;
+  }
+
+  modalBody.innerHTML = createDetailsHTML(movie);
 }
 
 // Event Listener
@@ -125,6 +196,29 @@ searchInput.addEventListener("keydown", function (event) {
     handleSearch();
   }
 });
+
+moviesContainer.addEventListener("click", function (event) {
+  if (event.target.classList.contains("btn-details")) {
+    const movieId = event.target.dataset.id;
+    openMovieDetails(movieId);
+  }
+});
+
+closeModalBtn.addEventListener("click", function () {
+  detailsModal.hidden = true;
+});
+
+detailsModal.addEventListener("click", function (event) {
+  if (event.target === detailsModal) {
+    detailsModal.hidden = true;
+  }
+});
+
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape") {
+    detailsModal.hidden = true;
+  }
+});
 // Initialize App
 async function initApp() {
   showLoading();
@@ -132,7 +226,12 @@ async function initApp() {
   const movies = await fetchMovies();
   allMovies = movies;
 
-  renderMovies(allMovies);
+  if (movies.length > 0) {
+    renderMovies(movies);
+  } else {
+    showEmptyState();
+  }
+
   hideLoading();
 }
 initApp();
