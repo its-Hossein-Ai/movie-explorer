@@ -203,6 +203,10 @@ body {
   cursor: pointer;
 }
 
+.fav-btn.is-active {
+  color: #e8a33d;
+}
+
 @media (max-width: 1024px) {
   .movies-grid {
     grid-template-columns: repeat(3, 1fr);

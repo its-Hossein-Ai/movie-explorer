@@ -13,6 +13,8 @@ const closeModalBtn = document.getElementById("closeModalBtn");
 const API_KEY = "6029522e90a963e633f95e1ed416ae03";
 const API_URL = `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=en-US&page=1`;
 let allMovies = [];
+let favoriteMovies = [];
+let currentDisplayedMovies = [];
 
 // Function
 async function fetchMovies() {
@@ -53,7 +55,9 @@ function hideError() {
 function createMovieCard(movie) {
   const posterUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
-    : "./images/no-poster.png";
+    : "";
+
+  const favClass = isFavorite(movie.id) ? "is-active" : "";
 
   return `
     <article class="movie-card">
@@ -65,7 +69,7 @@ function createMovieCard(movie) {
           <span class="release-date">${movie.release_date}</span>
         </div>
         <button class="btn-details" data-id="${movie.id}">View Details</button>
-        <button class="fav-btn">♥</button>
+        <button class="fav-btn ${favClass}" data-id="${movie.id}">♥</button>
       </div>
     </article>
   `;
@@ -189,6 +193,36 @@ async function openMovieDetails(movieId) {
   modalBody.innerHTML = createDetailsHTML(movie);
 }
 
+function isFavorite(movieId) {
+  return favoriteMovies.some((movie) => movie.id === Number(movieId));
+}
+
+function addFavorite(movie) {
+  favoriteMovies.push(movie);
+}
+
+function removeFavorite(movieId) {
+  favoriteMovies = favoriteMovies.filter(
+    (movie) => movie.id !== Number(movieId),
+  );
+}
+
+function toggleFavorite(movieId, movie) {
+  if (isFavorite(movieId)) {
+    removeFavorite(movieId);
+  } else {
+    addFavorite(movie);
+  }
+}
+
+function updateFavoriteButton(button, movieId) {
+  if (isFavorite(movieId)) {
+    button.classList.add("is-active");
+  } else {
+    button.classList.remove("is-active");
+  }
+}
+
 // Event Listener
 searchBtn.addEventListener("click", handleSearch);
 searchInput.addEventListener("keydown", function (event) {
@@ -201,6 +235,14 @@ moviesContainer.addEventListener("click", function (event) {
   if (event.target.classList.contains("btn-details")) {
     const movieId = event.target.dataset.id;
     openMovieDetails(movieId);
+  }
+
+  if (event.target.classList.contains("fav-btn")) {
+    const movieId = event.target.dataset.id;
+    const movie = allMovies.find((m) => m.id === Number(movieId));
+
+    toggleFavorite(movieId, movie);
+    updateFavoriteButton(event.target, movieId);
   }
 });
 
