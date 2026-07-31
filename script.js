@@ -12,9 +12,9 @@ const closeModalBtn = document.getElementById("closeModalBtn");
 // Variables
 const API_KEY = "6029522e90a963e633f95e1ed416ae03";
 const API_URL = `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=en-US&page=1`;
-let allMovies = [];
+let popularMovies = [];
+let displayedMovies = [];
 let favoriteMovies = [];
-let currentDisplayedMovies = [];
 let currentFilter = "all";
 
 // Function
@@ -131,9 +131,9 @@ async function handleSearch() {
 
   const results = await searchMovies(query);
 
-  allMovies = results;
+  adisplayedMovies = results;
 
-  renderMovies(allMovies);
+  renderMovies(displayedMovies);
 
   hideLoading();
 }
@@ -244,16 +244,17 @@ function loadFavorites() {
 }
 
 function showAllMovies() {
-  renderMovies(allMovies);
+  displayedMovies = popularMovies;
+  renderMovies(popularMovies);
 }
 
 function showTopRatedMovies() {
-  const topRated = allMovies.filter((movie) => movie.vote_average >= 7);
+  const topRated = displayedMovies.filter((movie) => movie.vote_average >= 7);
   renderMovies(topRated);
 }
 
 function showNewestMovies() {
-  const sorted = [...allMovies].sort((a, b) => {
+  const sorted = [...displayedMovies].sort((a, b) => {
     return new Date(b.release_date) - new Date(a.release_date);
   });
   renderMovies(sorted);
@@ -303,7 +304,7 @@ moviesContainer.addEventListener("click", function (event) {
 
   if (event.target.classList.contains("fav-btn")) {
     const movieId = event.target.dataset.id;
-    const movie = allMovies.find((m) => m.id === Number(movieId));
+    const movie = displayedMovies.find((m) => m.id === Number(movieId));
 
     toggleFavorite(movieId, movie);
     updateFavoriteButton(event.target, movieId);
@@ -344,8 +345,9 @@ async function initApp() {
   showLoading();
 
   const movies = await fetchMovies();
-  allMovies = movies;
-  currentDisplayedMovies = movies;
+
+  popularMovies = movies;
+  displayedMovies = movies;
 
   if (movies.length > 0) {
     renderMovies(movies);
