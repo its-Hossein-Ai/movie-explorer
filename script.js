@@ -15,6 +15,7 @@ const API_URL = `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&l
 let allMovies = [];
 let favoriteMovies = [];
 let currentDisplayedMovies = [];
+let currentFilter = "all";
 
 // Function
 async function fetchMovies() {
@@ -242,6 +243,50 @@ function loadFavorites() {
   }
 }
 
+function showAllMovies() {
+  renderMovies(allMovies);
+}
+
+function showTopRatedMovies() {
+  const topRated = allMovies.filter((movie) => movie.vote_average >= 7);
+  renderMovies(topRated);
+}
+
+function showNewestMovies() {
+  const sorted = [...allMovies].sort((a, b) => {
+    return new Date(b.release_date) - new Date(a.release_date);
+  });
+  renderMovies(sorted);
+}
+
+function showFavoriteMovies() {
+  renderMovies(favoriteMovies);
+}
+
+function filterMovies(filterType) {
+  currentFilter = filterType;
+
+  if (filterType === "all") {
+    showAllMovies();
+  } else if (filterType === "top-rated") {
+    showTopRatedMovies();
+  } else if (filterType === "newest") {
+    showNewestMovies();
+  } else if (filterType === "favorites") {
+    showFavoriteMovies();
+  }
+}
+
+function setActiveFilter(clickedButton) {
+  const allFilterButtons = document.querySelectorAll(".filter-btn");
+
+  allFilterButtons.forEach((button) => {
+    button.classList.remove("active");
+  });
+
+  clickedButton.classList.add("active");
+}
+
 // Event Listener
 searchBtn.addEventListener("click", handleSearch);
 searchInput.addEventListener("keydown", function (event) {
@@ -280,6 +325,17 @@ document.addEventListener("keydown", function (event) {
     detailsModal.hidden = true;
   }
 });
+
+document
+  .querySelector(".filter-section")
+  .addEventListener("click", function (event) {
+    if (event.target.classList.contains("filter-btn")) {
+      const filterType = event.target.dataset.filter;
+
+      filterMovies(filterType);
+      setActiveFilter(event.target);
+    }
+  });
 
 // Initialize App
 async function initApp() {
