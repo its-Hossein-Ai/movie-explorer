@@ -213,6 +213,8 @@ function toggleFavorite(movieId, movie) {
   } else {
     addFavorite(movie);
   }
+
+  saveFavorites();
 }
 
 function updateFavoriteButton(button, movieId) {
@@ -220,6 +222,23 @@ function updateFavoriteButton(button, movieId) {
     button.classList.add("is-active");
   } else {
     button.classList.remove("is-active");
+  }
+}
+
+function saveFavorites() {
+  localStorage.setItem("favoriteMovies", JSON.stringify(favoriteMovies));
+}
+
+function loadFavorites() {
+  try {
+    const stored = localStorage.getItem("favoriteMovies");
+
+    if (stored) {
+      favoriteMovies = JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error(error);
+    favoriteMovies = [];
   }
 }
 
@@ -261,12 +280,16 @@ document.addEventListener("keydown", function (event) {
     detailsModal.hidden = true;
   }
 });
+
 // Initialize App
 async function initApp() {
+  loadFavorites();
+
   showLoading();
 
   const movies = await fetchMovies();
   allMovies = movies;
+  currentDisplayedMovies = movies;
 
   if (movies.length > 0) {
     renderMovies(movies);
